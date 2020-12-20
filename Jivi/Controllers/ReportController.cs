@@ -1,9 +1,10 @@
 ﻿using ClosedXML.Excel;
+using DinkToPdf;
+using DinkToPdf.Contracts;
 using Jivi.Model;
+using Jivi.Utility;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using PdfSharp.Drawing;
-using PdfSharp.Pdf;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -20,6 +21,8 @@ namespace Jivi.Controllers
     public class ReportController : ControllerBase
     {
         public static List<EmployeeData> listEmp;
+        private IConverter _converter;
+
         private static readonly string[] Summaries = new[]
         {
             "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
@@ -27,9 +30,11 @@ namespace Jivi.Controllers
 
         private readonly ILogger<ReportController> _logger;
 
-        public ReportController(ILogger<ReportController> logger)
+        public ReportController(ILogger<ReportController> logger, IConverter converter)
         {
             _logger = logger;
+            _converter = converter;
+
             listEmp = new List<EmployeeData>();
             string con = @"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\Temp\SalaryData\Salary Register.xlsx; Extended Properties='Excel 8.0;HDR=Yes;'";
             using (OleDbConnection connection = new OleDbConnection(con))
@@ -131,57 +136,28 @@ namespace Jivi.Controllers
             }
         }
 
-
-        public static DataTable ToDataTable<T>(List<T> items)
-        {
-            DataTable dataTable = new DataTable(typeof(T).Name);
-
-            //Get all the properties
-            PropertyInfo[] Props = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            foreach (PropertyInfo prop in Props)
-            {
-                //Defining type of data column gives proper data table 
-                var type = (prop.PropertyType.IsGenericType && prop.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>) ? Nullable.GetUnderlyingType(prop.PropertyType) : prop.PropertyType);
-                //Setting column names as Property names
-                dataTable.Columns.Add(prop.Name, type);
-            }
-            foreach (T item in items)
-            {
-                var values = new object[Props.Length];
-                for (int i = 0; i < Props.Length; i++)
-                {
-                    //inserting property values to datatable rows
-                    values[i] = Props[i].GetValue(item, null);
-                }
-                dataTable.Rows.Add(values);
-            }
-            //put a breakpoint here and check datatable
-            return dataTable;
-        }
-
         [HttpGet]
         // [AllowMultipleButton(Name = "action", Argument = "ExportToExcel")]
-        [Route("ExportToExcel")]
-        public ActionResult ExportToExcel()
+        [Route("PFStatement")]
+        public ActionResult PFStatement()
         {
             // DataTable dtProduct = ToDataTable<EmployeeData>(listEmp);
-
             try
             {
                 DataTable dt = new DataTable();
-                // dt.Rows.Add("ESI Report For Sep 2020");
-                dt.Columns.AddRange(new DataColumn[7] {
-
-                    new DataColumn("SI No",typeof(int)),
+                dt.Columns.AddRange(new DataColumn[18] {
+                    new DataColumn("Sl No",typeof(int)),
                     new DataColumn("Employee Number",typeof(string)),
-                    new DataColumn("Insurance Number",typeof(Int64)),
-                    new DataColumn("Name of Insured Person",typeof(string)),
-                    new DataColumn("Days Worked",typeof(int)),
-                    new DataColumn("ESI Gross",typeof(int)),
-                    new DataColumn("Employee's Contribution",typeof(int))
-
-                });
-
+                    new DataColumn("Name",typeof(Int64)),
+                    new DataColumn("Date Of Joining",typeof(string)),
+                    new DataColumn("Date of Leaving",typeof(int)),
+                    new DataColumn("PF No",typeof(int)),
+                    new DataColumn("UAN No",typeof(int)),
+                    new DataColumn("Gross Wages",typeof(int)),
+                    new DataColumn("Regular",typeof(int)),
+                    new DataColumn("Arrear",typeof(int)),
+                    new DataColumn("Regular",typeof(int)),
+                    new DataColumn("Arrear",typeof(int)), new DataColumn("Regular",typeof(int)), new DataColumn("Arrear",typeof(int)), new DataColumn("Regular",typeof(int)), new DataColumn("Arrear",typeof(int)), new DataColumn("UAN No",typeof(int)), new DataColumn("UAN No",typeof(int))});
 
                 var listESI = listEmp.Where(a => !string.IsNullOrEmpty(a.InsuranceNo));
 
@@ -191,7 +167,7 @@ namespace Jivi.Controllers
                 foreach (var item in listESI)
                 {
                     dt.Rows.Add(item.SerialNumber,
-                            item.Code,
+                           item.Code,
                            item.InsuranceNo,
                            item.Name,
                            item.EmpWorkeddays - item.LOPDays, // == "NULL" ? "" : item.agentResults,
@@ -202,14 +178,7 @@ namespace Jivi.Controllers
                     TotalEmplContri = TotalEmplContri + item.EmployeesContribution;
                     i++;
                 }
-
-                dt.Rows.Add(null,
-                           null,
-                          null,
-                          "Grand Total",
-                          null, // == "NULL" ? "" : item.agentResults,
-                          TotalESI, TotalEmplContri);
-
+                dt.Rows.Add(null, null, null, "Grand Total", null, TotalESI, TotalEmplContri);
                 using (XLWorkbook workBook = new XLWorkbook())
                 {
                     workBook.Worksheets.Add(dt, "ESI");
@@ -220,12 +189,12 @@ namespace Jivi.Controllers
                     ws.Columns().AdjustToContents();
                     var rngHeaders = ws.Range("A" + i + ":G" + i);
                     // rngHeaders.Style.Fill.BackgroundColor = XLColor.VividViolet;
-                    rngHeaders.Style.Font.Bold = true ;
+                    rngHeaders.Style.Font.Bold = true;
 
                     using (MemoryStream stream = new MemoryStream())
                     {
                         workBook.SaveAs(stream);
-                        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ProductDetails.xlsx");
+                        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ESIC_Statement.xlsx");
                     }
                 }
             }
@@ -237,15 +206,63 @@ namespace Jivi.Controllers
         }
 
         [HttpGet]
-        [Route("GetReport")]
-        public List<EmployeeData> GetReport()
+        // [AllowMultipleButton(Name = "action", Argument = "ExportToExcel")]
+        [Route("ESICStatement")]
+        public ActionResult ESICStatement()
         {
-            // "C:\Temp\SalaryData\Salary Register.xlsx"
-            // "C:\Temp\SalaryData\Salary Register.xls"
-            // "C:\Temp\SalaryData\Book1.xlsx"
+            // DataTable dtProduct = ToDataTable<EmployeeData>(listEmp);
+
             try
             {
-                return listEmp;
+                DataTable dt = new DataTable();
+                dt.Columns.AddRange(new DataColumn[7] {
+                    new DataColumn("SI No",typeof(int)),
+                    new DataColumn("Employee Number",typeof(string)),
+                    new DataColumn("Insurance Number",typeof(Int64)),
+                    new DataColumn("Name of Insured Person",typeof(string)),
+                    new DataColumn("Days Worked",typeof(int)),
+                    new DataColumn("ESI Gross",typeof(int)),
+                    new DataColumn("Employee's Contribution",typeof(int))
+                });
+
+                var listESI = listEmp.Where(a => !string.IsNullOrEmpty(a.InsuranceNo));
+
+                int TotalESI = 0;
+                int TotalEmplContri = 0;
+                int i = 2;
+                foreach (var item in listESI)
+                {
+                    dt.Rows.Add(item.SerialNumber,
+                           item.Code,
+                           item.InsuranceNo,
+                           item.Name,
+                           item.EmpWorkeddays - item.LOPDays, // == "NULL" ? "" : item.agentResults,
+                           item.ESICGross,
+                           item.EmployeesContribution
+                        );
+                    TotalESI = TotalESI + item.ESICGross;
+                    TotalEmplContri = TotalEmplContri + item.EmployeesContribution;
+                    i++;
+                }
+                dt.Rows.Add(null, null, null, "Grand Total", null, TotalESI, TotalEmplContri);
+                using (XLWorkbook workBook = new XLWorkbook())
+                {
+                    workBook.Worksheets.Add(dt, "ESI");
+                    // workBook.Table. = false;
+                    workBook.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    workBook.Style.Font.Bold = true;
+                    var ws = workBook.Worksheet(1);
+                    ws.Columns().AdjustToContents();
+                    var rngHeaders = ws.Range("A" + i + ":G" + i);
+                    // rngHeaders.Style.Fill.BackgroundColor = XLColor.VividViolet;
+                    rngHeaders.Style.Font.Bold = true;
+
+                    using (MemoryStream stream = new MemoryStream())
+                    {
+                        workBook.SaveAs(stream);
+                        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ESIC_Statement.xlsx");
+                    }
+                }
             }
             catch (Exception e)
             {
@@ -255,62 +272,40 @@ namespace Jivi.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<WeatherForecast> Get()
+        [Route("GetAllEmployeeSalary")]
+        public ActionResult GetAllEmployeeSalary()
         {
-            var rng = new Random();
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+            try
             {
-                Date = DateTime.Now.AddDays(index),
-                TemperatureC = rng.Next(-20, 55),
-                Summary = Summaries[rng.Next(Summaries.Length)]
-            })
-            .ToArray();
+                var globalSettings = new GlobalSettings
+                {
+                    ColorMode = ColorMode.Color,
+                    Orientation = Orientation.Portrait,
+                    PaperSize = PaperKind.A4,
+                    Margins = new MarginSettings { Top = 10 },
+                    DocumentTitle = "Salary Report"
+                };
+                var objectSettings = new ObjectSettings
+                {
+                    PagesCount = true,
+                    HtmlContent = TemplateGenerator.GetHTMLString(),
+                    WebSettings = { DefaultEncoding = "utf-8", UserStyleSheet = Path.Combine(Directory.GetCurrentDirectory(), "assets", "styles.css") },
+                    HeaderSettings = { FontName = "Arial", FontSize = 9, Right = "Page [page] of [toPage]", Line = true },
+                    FooterSettings = { FontName = "Arial", FontSize = 9, Line = true, Center = "Report Footer" }
+                };
+                var pdf = new HtmlToPdfDocument()
+                {
+                    GlobalSettings = globalSettings,
+                    Objects = { objectSettings }
+                };
+                var file = _converter.Convert(pdf);
+                return File(file, "application/pdf");
+            }
+            catch (Exception e)
+            {
+
+                throw;
+            }
         }
-
-
-        [HttpGet]
-        // [AllowMultipleButton(Name = "action", Argument = "ExportToExcel")]
-        [Route("ExportToPDF")]
-        public ActionResult ExportToPDF()
-        {
-            //// DataTable dtProduct = ToDataTable<EmployeeData>(listEmp);
-
-            //try
-            //{
-            //    // Create a new PDF document
-            //    PdfDocument document = new PdfDocument();
-
-            //    // Create an empty page
-            //    PdfPage page = document.AddPage();
-
-            //    // Get an XGraphics object for drawing
-            //    XGraphics gfx = XGraphics.FromPdfPage(page);
-
-            //    // Create a font
-            //    XFont font = new XFont("Verdana", 20, XFontStyle.Bold);
-
-            //    // Draw the text
-            //    gfx.DrawString("Hello, World!", font, XBrushes.Black,
-            //      new XRect(0, 0, page.Width, page.Height),
-            //      XStringFormats.Center);
-
-            //    // Save the document...
-            //    string filename = "HelloWorld.pdf";
-            //    document.Save(filename);
-            //    using (MemoryStream stream = new MemoryStream())
-            //    {
-            //       // workBook.SaveAs(stream);
-            //        return File(document., "application/pdf", "ProductDetails.xlsx");
-            //    }
-            //}
-            //catch (Exception e)
-            //{
-
-            //    throw;
-            //}
-            return null;
-        }
-
-
     }
 }
