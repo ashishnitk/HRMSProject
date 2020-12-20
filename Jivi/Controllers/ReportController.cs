@@ -23,11 +23,6 @@ namespace Jivi.Controllers
         public static List<EmployeeData> listEmp;
         private IConverter _converter;
 
-        private static readonly string[] Summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
-
         private readonly ILogger<ReportController> _logger;
 
         public ReportController(ILogger<ReportController> logger, IConverter converter)
@@ -137,7 +132,6 @@ namespace Jivi.Controllers
         }
 
         [HttpGet]
-        // [AllowMultipleButton(Name = "action", Argument = "ExportToExcel")]
         [Route("PFStatement")]
         public ActionResult PFStatement()
         {
@@ -206,12 +200,9 @@ namespace Jivi.Controllers
         }
 
         [HttpGet]
-        // [AllowMultipleButton(Name = "action", Argument = "ExportToExcel")]
         [Route("ESICStatement")]
         public ActionResult ESICStatement()
         {
-            // DataTable dtProduct = ToDataTable<EmployeeData>(listEmp);
-
             try
             {
                 DataTable dt = new DataTable();
