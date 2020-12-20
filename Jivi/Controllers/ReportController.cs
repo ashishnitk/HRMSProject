@@ -22,7 +22,6 @@ namespace Jivi.Controllers
     {
         public static List<EmployeeData> listEmp;
         private IConverter _converter;
-
         private readonly ILogger<ReportController> _logger;
 
         public ReportController(ILogger<ReportController> logger, IConverter converter)
