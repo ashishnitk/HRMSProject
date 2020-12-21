@@ -289,7 +289,11 @@ namespace Jivi.Controllers
                     Objects = { objectSettings }
                 };
                 var file = _converter.Convert(pdf);
-                return File(file, "application/pdf");
+
+                var res = File(file, "application/pdf");
+                // Response.AddHeader("Content-Disposition", "attachment; filename=receipt.pdf");
+
+                return File(file, "application/pdf", "MyRenamedFile.pdf");
             }
             catch (Exception e)
             {
