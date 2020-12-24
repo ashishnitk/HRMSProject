@@ -59,6 +59,8 @@ namespace Jivi
             services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
             services.AddSingleton<ICosmosDbService>(InitializeCosmosClientInstanceAsync(Configuration.GetSection("CosmosDb")).GetAwaiter().GetResult());
 
+            services.AddResponseCaching();
+
             services.AddControllers();
             services.AddSwaggerGen(c=> {
                 c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "HR Reports", Version = "v1" });
@@ -74,6 +76,7 @@ namespace Jivi
             }
 
             app.UseHttpsRedirection();
+            app.UseResponseCaching();
 
             app.UseRouting();
             app.UseSwagger();

@@ -10,14 +10,12 @@ using Microsoft.Extensions.Configuration;
 
 namespace HRReporting.Services
 {
-    public class CosmosDbService: ICosmosDbService
+    public class CosmosDbService : ICosmosDbService
     {
         private Container _container;
+        private readonly int _batchPerTransectionSize = 99;
 
-        public CosmosDbService(
-            CosmosClient dbClient,
-            string databaseName,
-            string containerName)
+        public CosmosDbService(CosmosClient dbClient, string databaseName, string containerName)
         {
             this._container = dbClient.GetContainer(databaseName, containerName);
         }
@@ -27,12 +25,54 @@ namespace HRReporting.Services
             await this._container.CreateItemAsync<Employee>(item, new PartitionKey(item.Month));
         }
 
-        private readonly int _batchPerTransectionSize = 99;
+
+        public async Task DeleteItemAsync(string id)
+        {
+            await this._container.DeleteItemAsync<Employee>(id, new PartitionKey(id));
+        }
+
+        public async Task<Employee> GetItemAsync(string id)
+        {
+            try
+            {
+                ItemResponse<Employee> response = await this._container.ReadItemAsync<Employee>(id, new PartitionKey(id));
+                return response.Resource;
+            }
+            catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+        }
+
+        public async Task<List<Employee>> GetItemsAsync(string queryString)
+        {
+            try
+            {
+                var query = this._container.GetItemQueryIterator<Employee>(new QueryDefinition(queryString));
+                List<Employee> results = new List<Employee>();
+                while (query.HasMoreResults)
+                {
+                    var response = await query.ReadNextAsync();
+                    results.AddRange(response.ToList());
+                }
+                return results;
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
+        }
+
+        public async Task UpdateItemAsync(string id, Employee item)
+        {
+            await this._container.UpsertItemAsync<Employee>(item, new PartitionKey(id));
+        }
 
         public async Task<BulkInviteResponseModel> createBulkItemAsync(List<Employee> items)
         {
             List<TransactionalBatch> transactionalBatches = new List<TransactionalBatch>();
-            int numberOfBatches = items.Count / 90;
+            int numberOfBatches = items.Count / 90 + 1;
             // Form the transactional batches and add it to batch list
             for (int i = 0; i < numberOfBatches; i++)
             {
@@ -84,42 +124,5 @@ namespace HRReporting.Services
             return new BulkInviteResponseModel() { response = batchResponse, failedVisits = failedVisits };
         }
 
-        public async Task DeleteItemAsync(string id)
-        {
-            await this._container.DeleteItemAsync<Employee>(id, new PartitionKey(id));
-        }
-
-        public async Task<Employee> GetItemAsync(string id)
-        {
-            try
-            {
-                ItemResponse<Employee> response = await this._container.ReadItemAsync<Employee>(id, new PartitionKey(id));
-                return response.Resource;
-            }
-            catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-            {
-                return null;
-            }
-
-        }
-
-        public async Task<IEnumerable<Employee>> GetItemsAsync(string queryString)
-        {
-            var query = this._container.GetItemQueryIterator<Employee>(new QueryDefinition(queryString));
-            List<Employee> results = new List<Employee>();
-            while (query.HasMoreResults)
-            {
-                var response = await query.ReadNextAsync();
-
-                results.AddRange(response.ToList());
-            }
-
-            return results;
-        }
-
-        public async Task UpdateItemAsync(string id, Employee item)
-        {
-            await this._container.UpsertItemAsync<Employee>(item, new PartitionKey(id));
-        }
     }
 }

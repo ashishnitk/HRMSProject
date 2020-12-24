@@ -10,7 +10,7 @@ namespace HRMS.Model
     {
         [JsonProperty(PropertyName = "id")]
         public string Id { get; set; }
-        public int Month { get; set; }
+        public string Month { get; set; }
         public int SerialNumber { get; set; }
         public string EmplId { get; set; }
         public string Name { get; set; }
