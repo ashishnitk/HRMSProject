@@ -61,7 +61,7 @@ namespace Jivi
 
             services.AddControllers();
             services.AddSwaggerGen(c=> {
-                c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "MyAPI", Version = "v1" });
+                c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "HR Reports", Version = "v1" });
             });
         }
 

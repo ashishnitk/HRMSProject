@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Jivi.Model
+namespace HRMS.Model
 {
     public class ESIReportModel
     {

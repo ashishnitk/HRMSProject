@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace Jivi.Utility
+namespace HRMS.Utility
 {
     public class Util
     {

@@ -1,11 +1,11 @@
-﻿using Jivi.Controllers;
+﻿using HRMS.Controllers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Jivi.Utility
+namespace HRMS.Utility
 {
     public static class TemplateGenerator
     {

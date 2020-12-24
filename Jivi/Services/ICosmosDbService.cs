@@ -1,4 +1,4 @@
-﻿using Jivi.Model;
+﻿using HRMS.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
