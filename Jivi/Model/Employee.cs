@@ -1,14 +1,18 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Jivi.Model
 {
-    public class EmployeeData
+    public class Employee
     {
+        [JsonProperty(PropertyName = "id")]
+        public string Id { get; set; }
+        public int Month { get; set; }
         public int SerialNumber { get; set; }
-        public string Code { get; set; }
+        public string EmplId { get; set; }
         public string Name { get; set; }
         public string DOJ { get; set; }
         public string DOL { get; set; }

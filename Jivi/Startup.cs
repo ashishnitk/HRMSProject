@@ -1,6 +1,7 @@
 using DinkToPdf;
 using DinkToPdf.Contracts;
 using DocumentFormat.OpenXml.EMMA;
+using HRReporting.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -28,23 +29,36 @@ namespace Jivi
 
         public IConfiguration Configuration { get; }
 
+
+        /// <summary>
+        /// Creates a Cosmos DB database and a container with the specified partition key. 
+        /// </summary>
+        /// <returns></returns>
+        private static async Task<CosmosDbService> InitializeCosmosClientInstanceAsync(IConfigurationSection configurationSection)
+        {
+            string databaseName = configurationSection.GetSection("DatabaseName").Value;
+            string containerName = configurationSection.GetSection("ContainerName").Value;
+            string account = configurationSection.GetSection("Account").Value;
+            string key = configurationSection.GetSection("Key").Value;
+            Microsoft.Azure.Cosmos.CosmosClient client = new Microsoft.Azure.Cosmos.CosmosClient(account, key);
+            CosmosDbService cosmosDbService = new CosmosDbService(client, databaseName, containerName);
+            Microsoft.Azure.Cosmos.DatabaseResponse database = await client.CreateDatabaseIfNotExistsAsync(databaseName);
+            await database.Database.CreateContainerIfNotExistsAsync(containerName, "/Month");
+
+            return cosmosDbService;
+        }
+
+
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
-
             //windows
             string filePath = $@"{System.IO.Directory.GetCurrentDirectory()}\libwkhtmltox.dll";
-
-            ////linux
-            //string filePath = @$"{(($@"{Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)}/libwkhtmltox.so").Replace(@"\", @"/"))}";
-
             CustomAssemblyLoadContext context = new CustomAssemblyLoadContext();
             context.LoadUnmanagedLibrary(filePath);
-            // serviceCollection.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
-
-
             services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
+            services.AddSingleton<ICosmosDbService>(InitializeCosmosClientInstanceAsync(Configuration.GetSection("CosmosDb")).GetAwaiter().GetResult());
+
             services.AddControllers();
             services.AddSwaggerGen(c=> {
                 c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "MyAPI", Version = "v1" });
@@ -64,7 +78,9 @@ namespace Jivi
             app.UseRouting();
             app.UseSwagger();
             app.UseSwaggerUI(c=> {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json","My API Version 1"); 
+                c.SwaggerEndpoint("/swagger/v1/swagger.json","My API Version 1");
+                //c.SupportedSubmitMethods(new Swashbuckle.AspNetCore.SwaggerUI.SubmitMethod[] { });
+
             });
             app.UseAuthorization();
 

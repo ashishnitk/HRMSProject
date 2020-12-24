@@ -1,8 +1,10 @@
 ﻿using ClosedXML.Excel;
 using DinkToPdf;
 using DinkToPdf.Contracts;
+using HRReporting.Services;
 using Jivi.Model;
 using Jivi.Utility;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -20,16 +22,18 @@ namespace Jivi.Controllers
     [Route("[controller]")]
     public class ReportController : ControllerBase
     {
-        public static List<EmployeeData> listEmp;
+        public static List<Employee> listEmp;
         private IConverter _converter;
         private readonly ILogger<ReportController> _logger;
+        private readonly ICosmosDbService _cosmosDbService;
 
-        public ReportController(ILogger<ReportController> logger, IConverter converter)
+        public ReportController(ILogger<ReportController> logger, IConverter converter, ICosmosDbService cosmosDbService)
         {
             _logger = logger;
             _converter = converter;
+            _cosmosDbService = cosmosDbService;
 
-            listEmp = new List<EmployeeData>();
+            listEmp = new List<Employee>();
             string con = @"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\Temp\SalaryData\Salary Register.xlsx; Extended Properties='Excel 8.0;HDR=Yes;'";
             using (OleDbConnection connection = new OleDbConnection(con))
             {
@@ -41,10 +45,10 @@ namespace Jivi.Controllers
                     {
                         if (rdr[0] != null && int.TryParse(rdr[0].ToString(), out int res))
                         {
-                            EmployeeData ed = new EmployeeData()
+                            Employee ed = new Employee()
                             {
                                 SerialNumber = res,
-                                Code = rdr[1].ToString(),
+                                EmplId = rdr[1].ToString(),
                                 Name = rdr[2].ToString(),
                                 DOJ = rdr[3].ToString(),
                                 DOL = rdr[4].ToString(),
@@ -160,7 +164,7 @@ namespace Jivi.Controllers
                 foreach (var item in listESI)
                 {
                     dt.Rows.Add(item.SerialNumber,
-                           item.Code,
+                           item.EmplId,
                            item.InsuranceNo,
                            item.Name,
                            item.EmpWorkeddays - item.LOPDays, // == "NULL" ? "" : item.agentResults,
@@ -223,7 +227,7 @@ namespace Jivi.Controllers
                 foreach (var item in listESI)
                 {
                     dt.Rows.Add(item.SerialNumber,
-                           item.Code,
+                           item.EmplId,
                            item.InsuranceNo,
                            item.Name,
                            item.EmpWorkeddays - item.LOPDays, // == "NULL" ? "" : item.agentResults,
@@ -253,6 +257,27 @@ namespace Jivi.Controllers
                         return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ESIC_Statement.xlsx");
                     }
                 }
+            }
+            catch (Exception e)
+            {
+
+                throw;
+            }
+        }
+
+
+        [HttpPost("multiple-files")]
+        public async Task Upload(List<IFormFile> files)
+        {
+
+            try
+            {
+                //item.Id = Guid.NewGuid().ToString();
+                Employee eml = listEmp[0];
+                eml.Id = Guid.NewGuid().ToString();
+                eml.Month = 2;
+                await _cosmosDbService.AddItemAsync(listEmp.FirstOrDefault());
+                // validate the files, scan virus, save them to a file storage
             }
             catch (Exception e)
             {
