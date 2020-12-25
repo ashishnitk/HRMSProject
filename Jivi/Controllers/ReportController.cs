@@ -19,6 +19,7 @@ using ExcelDataReader;
 using HRReporting.Model;
 using HRReports.Utility.Excel;
 using HRReports.Model;
+using Microsoft.Azure.Cosmos;
 
 namespace HRMS.Controllers
 {
@@ -45,86 +46,15 @@ namespace HRMS.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("PFStatement")]
-        public ActionResult PFStatement()
+
+        public async Task<ActionResult> PFStatement()
         {
             // DataTable dtProduct = ToDataTable<EmployeeData>(listEmp);
             try
             {
-                DataTable dt = new DataTable();
-                dt.Columns.AddRange(new DataColumn[18] {
-                    new DataColumn("Sl No",typeof(int)),
-                    new DataColumn("Employee Number",typeof(string)),
-                    new DataColumn("Name",typeof(Int64)),
-                    new DataColumn("Date Of Joining",typeof(string)),
-                    new DataColumn("Date of Leaving",typeof(int)),
-                    new DataColumn("PF No",typeof(int)),
-                    new DataColumn("UAN No",typeof(int)),
-                    new DataColumn("Gross Wages",typeof(int)),
-                    new DataColumn("Regular",typeof(int)),
-                    new DataColumn("Arrear",typeof(int)),
-                    new DataColumn("Regular",typeof(int)),
-                    new DataColumn("Arrear",typeof(int)), new DataColumn("Regular",typeof(int)), new DataColumn("Arrear",typeof(int)), new DataColumn("Regular",typeof(int)), new DataColumn("Arrear",typeof(int)), new DataColumn("UAN No",typeof(int)), new DataColumn("UAN No",typeof(int))});
+                QueryDefinition query = new QueryDefinition("select * from c where c.Month = @month").WithParameter("@month", string.Format("{0}{1}", "March", 2020));
 
-                var listESI = listEmp.Where(a => !string.IsNullOrEmpty(a.InsuranceNo));
-
-                int TotalESI = 0;
-                int TotalEmplContri = 0;
-                int i = 2;
-                foreach (var item in listESI)
-                {
-                    dt.Rows.Add(item.SerialNumber,
-                           item.EmplId,
-                           item.InsuranceNo,
-                           item.Name,
-                           item.EmpWorkeddays - item.LOPDays, // == "NULL" ? "" : item.agentResults,
-                           item.ESICGross,
-                           item.EmployeesContribution
-                        );
-                    TotalESI = TotalESI + item.ESICGross;
-                    TotalEmplContri = TotalEmplContri + item.EmployeesContribution;
-                    i++;
-                }
-                dt.Rows.Add(null, null, null, "Grand Total", null, TotalESI, TotalEmplContri);
-                using (XLWorkbook workBook = new XLWorkbook())
-                {
-                    workBook.Worksheets.Add(dt, "ESI");
-                    // workBook.Table. = false;
-                    workBook.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                    workBook.Style.Font.Bold = true;
-                    var ws = workBook.Worksheet(1);
-                    ws.Columns().AdjustToContents();
-                    var rngHeaders = ws.Range("A" + i + ":G" + i);
-                    // rngHeaders.Style.Fill.BackgroundColor = XLColor.VividViolet;
-                    rngHeaders.Style.Font.Bold = true;
-
-                    using (MemoryStream stream = new MemoryStream())
-                    {
-                        workBook.SaveAs(stream);
-                        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ESIC_Statement.xlsx");
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// Employees' State Insurance Corporation Report
-        /// </summary>
-        /// <param name="Month">Select the Month</param>
-        /// <param name="Year">Four Digit Year</param>
-        /// <returns></returns>
-        [HttpGet]
-        // [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "impactlevel", "pii" })]
-        [Route("ESICStatement")]
-        public async Task<ActionResult> ESICStatement(Month Month, int Year)
-        {
-            try
-            {
-                List<Employee> listEmp = await _cosmosDbService.GetItemsAsync("SELECT * FROM c");
+                List<Employee> listEmp = await _cosmosDbService.GetItemsAsync(query);
                 ESICDataTable dt = Excel.GetESICDataTable(listEmp);
 
                 using (XLWorkbook workBook = new XLWorkbook())
@@ -154,7 +84,59 @@ namespace HRMS.Controllers
         }
 
         /// <summary>
-        /// Register the Salary
+        /// Employees' State Insurance Corporation Report
+        /// </summary>
+        /// <param name="Month">Select the Month</param>
+        /// <param name="Year">Four Digit Year</param>
+        /// <returns></returns>
+        /// <response code="200">Ok</response>
+        /// <response code="404">Employee Data Not Found</response>
+        /// <response code="500">Internal Server error</response>
+        [HttpGet]
+        // [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "impactlevel", "pii" })]
+        [Route("ESICStatement")]
+        public async Task<ActionResult> ESICStatement(Month Month, int Year)
+        {
+            try
+            {
+                QueryDefinition query = new QueryDefinition("select * from c where c.Month = @month").WithParameter("@month", string.Format("{0}{1}", Month, Year));
+
+                List<Employee> listEmp = await _cosmosDbService.GetItemsAsync(query);
+
+                if (listEmp.Count > 0)
+                {
+                    ESICDataTable dt = Excel.GetESICDataTable(listEmp);
+
+                    using (XLWorkbook workBook = new XLWorkbook())
+                    {
+                        workBook.Worksheets.Add(dt.DataTable, "ESI");
+                        // workBook.Table. = false;
+                        workBook.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                        workBook.Style.Font.Bold = true;
+                        var ws = workBook.Worksheet(1);
+                        ws.Columns().AdjustToContents();
+                        var rngHeaders = ws.Range("A" + dt.RowToBeBold + ":G" + dt.RowToBeBold);
+                        // rngHeaders.Style.Fill.BackgroundColor = XLColor.VividViolet;
+                        rngHeaders.Style.Font.Bold = true;
+
+                        using (MemoryStream stream = new MemoryStream())
+                        {
+                            workBook.SaveAs(stream);
+                            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ESIC_Statement.xlsx");
+                        }
+                    }
+                }
+                else
+                    return NotFound(string.Format("Employee data not found for the Month {0} and Year {1}", Month, Year));
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Upload the Salary Register
         /// </summary>
         /// <param name="file">Input File in xls format</param>
         /// <returns></returns>
@@ -169,9 +151,9 @@ namespace HRMS.Controllers
                 string fileExtension = Path.GetExtension(file.FileName);
                 if (fileExtension != ".xls" && fileExtension != ".xlsx")
                     return Content("Invalid file format, Please upload .xls file");
-                
+
                 List<Employee> listOfEmployees = Excel.ParseAllEmployees(file);
-                
+
                 await _cosmosDbService.createBulkItemAsync(listOfEmployees);
                 return Ok();
             }
@@ -188,6 +170,7 @@ namespace HRMS.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("GetAllEmployeeSalary")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public ActionResult GetAllEmployeeSalary()
         {
             try

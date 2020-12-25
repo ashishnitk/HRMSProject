@@ -45,11 +45,11 @@ namespace HRReporting.Services
 
         }
 
-        public async Task<List<Employee>> GetItemsAsync(string queryString)
+        public async Task<List<Employee>> GetItemsAsync(QueryDefinition inputQuery)
         {
             try
             {
-                var query = this._container.GetItemQueryIterator<Employee>(new QueryDefinition(queryString));
+                var query = this._container.GetItemQueryIterator<Employee>(inputQuery);
                 List<Employee> results = new List<Employee>();
                 while (query.HasMoreResults)
                 {

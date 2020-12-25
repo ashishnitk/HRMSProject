@@ -7,7 +7,6 @@ namespace HRReporting.Model
 {
     public enum Month
     {
-        NotSet,
         January,
         February,
         March,

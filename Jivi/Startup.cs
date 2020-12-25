@@ -46,7 +46,6 @@ namespace Jivi
             CosmosDbService cosmosDbService = new CosmosDbService(client, databaseName, containerName);
             Microsoft.Azure.Cosmos.DatabaseResponse database = await client.CreateDatabaseIfNotExistsAsync(databaseName);
             await database.Database.CreateContainerIfNotExistsAsync(containerName, "/Month");
-
             return cosmosDbService;
         }
 
@@ -75,7 +74,7 @@ namespace Jivi
             {
                 c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
                 {
-                    Title = "HR Reports",
+                    Title = "Microgreen HR Reports",
                     Version = "v1",
                     Description = "Company's internal Portal for HR Reporting services",
                     Contact = new Microsoft.OpenApi.Models.OpenApiContact()
