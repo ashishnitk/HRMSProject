@@ -2,6 +2,7 @@ using DinkToPdf;
 using DinkToPdf.Contracts;
 using DocumentFormat.OpenXml.EMMA;
 using HRReporting.Services;
+using HRReports.Utility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -16,6 +17,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace Jivi
@@ -62,8 +64,19 @@ namespace Jivi
             services.AddResponseCaching();
 
             services.AddControllers();
+            //services.AddSwaggerGen(options =>
+            //{
+            //    options.SchemaFilter<EnumSchemaFilter>();
+            //});
+
+            services.AddControllersWithViews()
+                .AddJsonOptions(options =>
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
             services.AddSwaggerGen(c=> {
                 c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "HR Reports", Version = "v1" });
+                // c..SchemaFilter<EnumSchemaFilter>();
+                // c.DescribeAllEnumsAsStrings();
             });
         }
 
