@@ -118,7 +118,7 @@ namespace HRMS.Controllers
         /// <param name="Year">Four Digit Year</param>
         /// <returns></returns>
         [HttpGet]
-        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "impactlevel", "pii" })]
+        // [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "impactlevel", "pii" })]
         [Route("ESICStatement")]
         public async Task<ActionResult> ESICStatement(Month Month, int Year)
         {

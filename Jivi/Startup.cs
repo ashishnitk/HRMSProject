@@ -55,9 +55,9 @@ namespace Jivi
         public void ConfigureServices(IServiceCollection services)
         {
             //windows
-            string filePath = $@"{System.IO.Directory.GetCurrentDirectory()}\libwkhtmltox.dll";
-            CustomAssemblyLoadContext context = new CustomAssemblyLoadContext();
-            context.LoadUnmanagedLibrary(filePath);
+            //string filePath = $@"{System.IO.Directory.GetCurrentDirectory()}\libwkhtmltox.dll";
+            //CustomAssemblyLoadContext context = new CustomAssemblyLoadContext();
+            //context.LoadUnmanagedLibrary(filePath);
             services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
             services.AddSingleton<ICosmosDbService>(InitializeCosmosClientInstanceAsync(Configuration.GetSection("CosmosDb")).GetAwaiter().GetResult());
 
@@ -86,7 +86,7 @@ namespace Jivi
                     }
 
                 });
-                c.IncludeXmlComments(System.IO.Path.Combine(app, "HRReports.xml"));
+                //  c.IncludeXmlComments(System.IO.Path.Combine(app, "HRReports.xml"));
                 // c..SchemaFilter<EnumSchemaFilter>();
                 // c.DescribeAllEnumsAsStrings();
             });
@@ -101,7 +101,7 @@ namespace Jivi
             }
 
             app.UseHttpsRedirection();
-            app.UseResponseCaching();
+            // app.UseResponseCaching();
 
             app.UseRouting();
             app.UseSwagger();
