@@ -14,6 +14,70 @@ namespace HRReports.Utility.Excel
     public static class Excel
     {
 
+
+        public static ESICDataTable GetPFDataTable(List<Employee> listEmployees)
+        {
+            DataTable dt = new DataTable();
+            dt.Columns.AddRange(new DataColumn[18] {
+                    new DataColumn("SI No",typeof(int)),
+                    new DataColumn("Employee Number",typeof(string)),
+                    new DataColumn("Name",typeof(string)),
+                    new DataColumn("Date Of Joining",typeof(string)),
+                    new DataColumn("Date Of Leaving",typeof(string)),
+                    new DataColumn("PF Number",typeof(string)),
+                    new DataColumn("UAN Number",typeof(string)),
+                    new DataColumn("Gross Wadges",typeof(int)),
+                    new DataColumn("BasicDA Regular",typeof(int)),
+                    new DataColumn("BasicDA Arrear",typeof(int)),
+                    new DataColumn("PF Regular",typeof(int)),
+                    new DataColumn("PF Arrear",typeof(int)),
+                    new DataColumn("VPF",typeof(int)),
+                    new DataColumn("ER PF Regular",typeof(int)),
+                    new DataColumn("ER PF Arrear",typeof(int)),
+                    new DataColumn("EPS Regular",typeof(int)),
+                    new DataColumn("EPS Arrear",typeof(int)),
+                    new DataColumn("Total",typeof(int))
+                });
+
+            int TotalESI = 0;
+            int TotalEmplContri = 0;
+            int i = 2;
+            foreach (var item in listEmployees)
+            {
+                dt.Rows.Add(
+                    item.SerialNumber,
+                       item.EmplId,
+                       item.Name,
+                       item.DOJ,
+                       item.DOL,
+                       item.PFNo,
+                       item.UANNo,
+                       item.GrossWages,
+                       item.BasicDA.Regular,
+                       item.BasicDA.Arrear,
+                       item.PF1.Regular,
+                       item.PF1.Arrear,
+                       item.VPF,
+                       item.PF2.Regular,
+                       item.PF2.Arrear,
+                       item.EPS.Regular,
+                       item.EPS.Arrear,
+                       item.BasicDA.Regular + item.BasicDA.Arrear + item.PF1.Regular + item.PF1.Arrear + item.VPF + item.PF2.Regular + item.PF2.Arrear + item.EPS.Regular + item.EPS.Arrear
+                    );
+                TotalESI = TotalESI + item.ESICGross;
+                TotalEmplContri = TotalEmplContri + item.EmployeesContribution;
+                i++;
+            }
+            dt.Rows.Add(null, null, null, "Grand Total", null, TotalESI, TotalEmplContri);
+            return new ESICDataTable()
+            {
+                DataTable = dt,
+                RowToBeBold = i
+            };
+        }
+
+
+
         public static ESICDataTable GetESICDataTable(List<Employee> listEmployees)
         {
             DataTable dt = new DataTable();
@@ -156,12 +220,12 @@ namespace HRReports.Utility.Excel
 
                                 BasicDA = new RA() { Regular = Convert.ToInt32(rdr[62]), Arrear = Convert.ToInt32(rdr[63]) },
                                 PF1 = new RA() { Arrear = Convert.ToInt32(rdr[65]), Regular = Convert.ToInt32(rdr[64]) },
-                               
+
                                 VPF = Convert.ToInt32(rdr[66]),
-                                
+
                                 PF2 = new RA() { Arrear = Convert.ToInt32(rdr[68]), Regular = Convert.ToInt32(rdr[67]) },
 
-                                EPS = new RA() { Arrear = Convert.ToInt32(rdr[70]),  Regular = Convert.ToInt32(rdr[69]) },
+                                EPS = new RA() { Arrear = Convert.ToInt32(rdr[70]), Regular = Convert.ToInt32(rdr[69]) },
 
                                 Total = Convert.ToInt32(rdr[71]),
                                 TaxRegime = rdr[72].ToString(),

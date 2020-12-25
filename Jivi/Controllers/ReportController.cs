@@ -47,15 +47,16 @@ namespace HRMS.Controllers
         [HttpGet]
         [Route("PFStatement")]
 
-        public async Task<ActionResult> PFStatement()
+        public async Task<ActionResult> PFStatement(Month Month, int Year)
         {
             // DataTable dtProduct = ToDataTable<EmployeeData>(listEmp);
             try
             {
-                QueryDefinition query = new QueryDefinition("select * from c where c.Month = @month").WithParameter("@month", string.Format("{0}{1}", "March", 2020));
+                QueryDefinition query = new QueryDefinition("select * from c where c.Month = @month").WithParameter("@month", string.Format("{0}{1}", Month, Year));
 
                 List<Employee> listEmp = await _cosmosDbService.GetItemsAsync(query);
-                ESICDataTable dt = Excel.GetESICDataTable(listEmp);
+
+                ESICDataTable dt = Excel.GetPFDataTable(listEmp);
 
                 using (XLWorkbook workBook = new XLWorkbook())
                 {
@@ -72,7 +73,7 @@ namespace HRMS.Controllers
                     using (MemoryStream stream = new MemoryStream())
                     {
                         workBook.SaveAs(stream);
-                        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ESIC_Statement.xlsx");
+                        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", string.Format("PF_Statement_{0}{1}.xlsx", Month, Year));
                     }
                 }
             }
@@ -122,7 +123,7 @@ namespace HRMS.Controllers
                         using (MemoryStream stream = new MemoryStream())
                         {
                             workBook.SaveAs(stream);
-                            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ESIC_Statement.xlsx");
+                            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", string.Format("ESIC_Statement_{0}{1}.xlsx", Month, Year));
                         }
                     }
                 }

@@ -4,7 +4,7 @@
         <name>HRReports</name>
     </assembly>
     <members>
-        <member name="M:HRMS.Controllers.ReportController.PFStatement">
+        <member name="M:HRMS.Controllers.ReportController.PFStatement(HRReporting.Model.Month,System.Int32)">
             <summary>
             Provident Fund statement of an employee
             </summary>
