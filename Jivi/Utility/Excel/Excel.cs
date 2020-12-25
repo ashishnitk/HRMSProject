@@ -153,15 +153,16 @@ namespace HRReports.Utility.Excel
                                 Remarks = rdr[59].ToString(),
                                 Status = rdr[60].ToString(),
                                 GrossWages = Convert.ToInt32(rdr[61]),
-                                BasicDA_Regular = Convert.ToInt32(rdr[62]),
-                                BasicDA_Arrear = Convert.ToInt32(rdr[63]),
-                                PF_Regular = Convert.ToInt32(rdr[64]),
-                                PF_Arrear = Convert.ToInt32(rdr[65]),
+
+                                BasicDA = new RA() { Regular = Convert.ToInt32(rdr[62]), Arrear = Convert.ToInt32(rdr[63]) },
+                                PF1 = new RA() { Arrear = Convert.ToInt32(rdr[65]), Regular = Convert.ToInt32(rdr[64]) },
+                               
                                 VPF = Convert.ToInt32(rdr[66]),
-                                PF2_Regular = Convert.ToInt32(rdr[67]),
-                                PF2_Arrear = Convert.ToInt32(rdr[68]),
-                                EPS_Regular = Convert.ToInt32(rdr[69]),
-                                EPS_Arrear = Convert.ToInt32(rdr[70]),
+                                
+                                PF2 = new RA() { Arrear = Convert.ToInt32(rdr[68]), Regular = Convert.ToInt32(rdr[67]) },
+
+                                EPS = new RA() { Arrear = Convert.ToInt32(rdr[70]),  Regular = Convert.ToInt32(rdr[69]) },
+
                                 Total = Convert.ToInt32(rdr[71]),
                                 TaxRegime = rdr[72].ToString(),
                                 TaxableIncome = Convert.ToInt32(rdr[73]),

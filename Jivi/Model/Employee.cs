@@ -71,15 +71,13 @@ namespace HRMS.Model
         public string Remarks { get; set; }
         public string Status { get; set; }
         public int GrossWages { get; set; }
-        public int BasicDA_Regular { get; set; }
-        public int BasicDA_Arrear { get; set; }
-        public int PF_Regular { get; set; }
-        public int PF_Arrear { get; set; }
+        public RA BasicDA { get; set; }
+        public RA PF1 { get; set; }
         public int VPF { get; set; }
-        public int PF2_Regular { get; set; }
-        public int PF2_Arrear { get; set; }
-        public int EPS_Regular { get; set; }
-        public int EPS_Arrear { get; set; }
+        public RA PF2 { get; set; }
+
+        public RA EPS { get; set; }
+
         public int Total { get; set; }
         public string TaxRegime { get; set; }
         public int TaxableIncome { get; set; }
@@ -91,4 +89,11 @@ namespace HRMS.Model
         public int EmployeesContribution { get; set; }
 
     }
+
+    public class RA
+    {
+        public int Regular { get; set; }
+        public int Arrear { get; set; }
+    }
+
 }
