@@ -5,6 +5,11 @@
     <RootNamespace>HRReports</RootNamespace>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>C:\Users\aspras\source\repos\Jivi\Jivi\HRReports.xml</DocumentationFile>
+    <OutputPath>bin\Debug\netcoreapp3.1\</OutputPath>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.95.4" />
     <PackageReference Include="DinkToPdf" Version="1.0.8" />

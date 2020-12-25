@@ -24,6 +24,7 @@ namespace HRMS.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+
     public class ReportController : ControllerBase
     {
         public static List<Employee> listEmp;
@@ -38,6 +39,10 @@ namespace HRMS.Controllers
             _cosmosDbService = cosmosDbService;
         }
 
+        /// <summary>
+        /// Provident Fund statement of an employee
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [Route("PFStatement")]
         public ActionResult PFStatement()
@@ -106,6 +111,12 @@ namespace HRMS.Controllers
             }
         }
 
+        /// <summary>
+        /// Employees' State Insurance Corporation Report
+        /// </summary>
+        /// <param name="Month">Select the Month</param>
+        /// <param name="Year">Four Digit Year</param>
+        /// <returns></returns>
         [HttpGet]
         [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "impactlevel", "pii" })]
         [Route("ESICStatement")]
@@ -142,7 +153,11 @@ namespace HRMS.Controllers
             }
         }
 
-
+        /// <summary>
+        /// Register the Salary
+        /// </summary>
+        /// <param name="file">Input File in xls format</param>
+        /// <returns></returns>
         [HttpPost("SalaryRegister")]
         public async Task<IActionResult> Upload(IFormFile file)
         {
@@ -167,6 +182,10 @@ namespace HRMS.Controllers
             }
         }
 
+        /// <summary>
+        /// Get the Salary report of all Employee
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [Route("GetAllEmployeeSalary")]
         public ActionResult GetAllEmployeeSalary()

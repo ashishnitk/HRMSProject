@@ -64,17 +64,29 @@ namespace Jivi
             services.AddResponseCaching();
 
             services.AddControllers();
-            //services.AddSwaggerGen(options =>
-            //{
-            //    options.SchemaFilter<EnumSchemaFilter>();
-            //});
 
             services.AddControllersWithViews()
                 .AddJsonOptions(options =>
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
-            services.AddSwaggerGen(c=> {
-                c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "HR Reports", Version = "v1" });
+            string app = System.AppContext.BaseDirectory;
+
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+                {
+                    Title = "HR Reports",
+                    Version = "v1",
+                    Description = "Company's internal Portal for HR Reporting services",
+                    Contact = new Microsoft.OpenApi.Models.OpenApiContact()
+                    {
+                        Email = "srajareddy2408@gmail.com",
+                        Name = "Raj Reddy",
+                        Url = new Uri("https://www.linkedin.com/in/ashishnitk/")
+                    }
+
+                });
+                c.IncludeXmlComments(System.IO.Path.Combine(app, "HRReports.xml"));
                 // c..SchemaFilter<EnumSchemaFilter>();
                 // c.DescribeAllEnumsAsStrings();
             });
@@ -93,8 +105,9 @@ namespace Jivi
 
             app.UseRouting();
             app.UseSwagger();
-            app.UseSwaggerUI(c=> {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json","My API Version 1");
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
                 //c.SupportedSubmitMethods(new Swashbuckle.AspNetCore.SwaggerUI.SubmitMethod[] { });
 
             });
@@ -105,5 +118,6 @@ namespace Jivi
                 endpoints.MapControllers();
             });
         }
+
     }
 }

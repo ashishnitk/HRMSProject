@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>HRReports</name>
+    </assembly>
+    <members>
+        <member name="M:HRMS.Controllers.ReportController.PFStatement">
+            <summary>
+            Provident Fund statement of an employee
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:HRMS.Controllers.ReportController.ESICStatement(HRReporting.Model.Month,System.Int32)">
+            <summary>
+            Employees' State Insurance Corporation Report
+            </summary>
+            <param name="Month">Select the Month</param>
+            <param name="Year">Four Digit Year</param>
+            <returns></returns>
+        </member>
+        <member name="M:HRMS.Controllers.ReportController.Upload(Microsoft.AspNetCore.Http.IFormFile)">
+            <summary>
+            Register the Salary
+            </summary>
+            <param name="file">Input File in xls format</param>
+            <returns></returns>
+        </member>
+        <member name="M:HRMS.Controllers.ReportController.GetAllEmployeeSalary">
+            <summary>
+            Get the Salary report of all Employee
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:HRReporting.Model.BulkInviteResponseModel">
+            <summary>
+            response model for Bulk invite
+            </summary>
+        </member>
+        <member name="P:HRReporting.Model.BulkInviteResponseModel.response">
+            <summary>
+            Responses
+            </summary>
+        </member>
+        <member name="P:HRReporting.Model.BulkInviteResponseModel.failedVisits">
+            <summary>
+            Failed Visits DocIds
+            </summary>
+        </member>
+        <member name="T:HRReporting.Model.BatchResponse">
+            <summary>
+            Batch Response
+            </summary>
+        </member>
+        <member name="P:HRReporting.Model.BatchResponse.ActivityId">
+            <summary>
+            Gets the ActivityId that identifies the server request made to execute the batch.
+            </summary>
+        </member>
+        <member name="P:HRReporting.Model.BatchResponse.StatusCode">
+            <summary>
+            Responses
+            </summary>
+        </member>
+        <member name="P:HRReporting.Model.BatchResponse.IsSuccessStatusCode">
+            <summary>
+            Created DocIds
+            </summary>
+        </member>
+        <member name="P:HRReporting.Model.BatchResponse.ErrorMessage">
+            <summary>
+              Gets the reason for failure of the batch request.
+            </summary>
+        </member>
+        <member name="P:HRReporting.Model.BatchResponse.Count">
+            <summary>
+            Gets the number of operation results.
+            </summary>
+        </member>
+        <member name="P:HRReporting.Model.BatchResponse.RetryAfter">
+            <summary>
+             Gets the amount of time to wait before retrying this or any other request within
+             Cosmos container or collection due to throttling.
+            </summary>
+        </member>
+        <member name="M:Jivi.Startup.InitializeCosmosClientInstanceAsync(Microsoft.Extensions.Configuration.IConfigurationSection)">
+            <summary>
+            Creates a Cosmos DB database and a container with the specified partition key. 
+            </summary>
+            <returns></returns>
+        </member>
+    </members>
+</doc>
