@@ -8,7 +8,7 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DocumentationFile>C:\Users\aspras\source\repos\Jivi\Jivi\HRReports.xml</DocumentationFile>
-    <OutputPath>bin\Debug\netcoreapp3.1\</OutputPath>
+    <OutputPath>bin\Release\netcoreapp3.1\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,5 +25,12 @@
     <Folder Include="Utility\PDF\" />
   </ItemGroup>
 
-
+<Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
+    <ItemGroup>
+        <DocFile Include="bin\*\*\*.xml" />
+    </ItemGroup>
+    <Copy SourceFiles="@(DocFile)" 
+          DestinationFolder="$(PublishDir)" 
+          SkipUnchangedFiles="false" />
+</Target>
 </Project>

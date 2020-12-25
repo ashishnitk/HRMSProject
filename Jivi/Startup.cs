@@ -86,7 +86,10 @@ namespace Jivi
                     }
 
                 });
-                //  c.IncludeXmlComments(System.IO.Path.Combine(app, "HRReports.xml"));
+                if (File.Exists(System.IO.Path.Combine(app, "HRReports.xml")))
+                {
+                    c.IncludeXmlComments(System.IO.Path.Combine(app, "HRReports.xml"));
+                }
                 // c..SchemaFilter<EnumSchemaFilter>();
                 // c.DescribeAllEnumsAsStrings();
             });
