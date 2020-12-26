@@ -1,5 +1,3 @@
-using DinkToPdf;
-using DinkToPdf.Contracts;
 using DocumentFormat.OpenXml.EMMA;
 using HRReporting.Services;
 using HRReports.Utility;
@@ -53,11 +51,6 @@ namespace Jivi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            //windows
-            //string filePath = $@"{System.IO.Directory.GetCurrentDirectory()}\libwkhtmltox.dll";
-            //CustomAssemblyLoadContext context = new CustomAssemblyLoadContext();
-            //context.LoadUnmanagedLibrary(filePath);
-            services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
             services.AddSingleton<ICosmosDbService>(InitializeCosmosClientInstanceAsync(Configuration.GetSection("CosmosDb")).GetAwaiter().GetResult());
 
             services.AddResponseCaching();

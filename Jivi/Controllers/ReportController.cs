@@ -1,6 +1,4 @@
 ﻿using ClosedXML.Excel;
-using DinkToPdf;
-using DinkToPdf.Contracts;
 using HRReporting.Services;
 using HRMS.Model;
 using HRMS.Utility;
@@ -20,6 +18,7 @@ using HRReporting.Model;
 using HRReports.Utility.Excel;
 using HRReports.Model;
 using Microsoft.Azure.Cosmos;
+using SelectPdf;
 
 namespace HRMS.Controllers
 {
@@ -29,14 +28,12 @@ namespace HRMS.Controllers
     public class ReportController : ControllerBase
     {
         public static List<Employee> listEmp;
-        private IConverter _converter;
         private readonly ILogger<ReportController> _logger;
         private readonly ICosmosDbService _cosmosDbService;
 
-        public ReportController(ILogger<ReportController> logger, IConverter converter, ICosmosDbService cosmosDbService)
+        public ReportController(ILogger<ReportController> logger, ICosmosDbService cosmosDbService)
         {
             _logger = logger;
-            _converter = converter;
             _cosmosDbService = cosmosDbService;
         }
 
@@ -171,38 +168,46 @@ namespace HRMS.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("GetAllEmployeeSalary")]
-        [ApiExplorerSettings(IgnoreApi = true)]
-        public ActionResult GetAllEmployeeSalary()
+        //  [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<ActionResult> GetAllEmployeeSalary()
         {
             try
             {
-                var globalSettings = new GlobalSettings
-                {
-                    ColorMode = ColorMode.Color,
-                    Orientation = Orientation.Portrait,
-                    PaperSize = PaperKind.A4,
-                    Margins = new MarginSettings { Top = 10 },
-                    DocumentTitle = "Salary Report"
-                };
-                var objectSettings = new ObjectSettings
-                {
-                    PagesCount = true,
-                    HtmlContent = TemplateGenerator.GetHTMLString(),
-                    WebSettings = { DefaultEncoding = "utf-8", UserStyleSheet = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "styles.css") },
-                    HeaderSettings = { FontName = "Arial", FontSize = 9, Right = "Page [page] of [toPage]", Line = true },
-                    FooterSettings = { FontName = "Arial", FontSize = 9, Line = true, Center = "Report Footer" }
-                };
-                var pdf = new HtmlToPdfDocument()
-                {
-                    GlobalSettings = globalSettings,
-                    Objects = { objectSettings }
-                };
-                var file = _converter.Convert(pdf);
+                QueryDefinition query = new QueryDefinition("select * from c");
 
-                var res = File(file, "application/pdf");
-                // Response.AddHeader("Content-Disposition", "attachment; filename=receipt.pdf");
+                List<Employee> listEmp = await _cosmosDbService.GetItemsAsync(query);
 
-                return File(file, "application/pdf", "MyRenamedFile.pdf");
+                // instantiate converter object
+                SelectPdf.HtmlToPdf converter = new SelectPdf.HtmlToPdf();
+
+                // set converter options
+                converter.Options.WebPageWidth = 1024;
+                converter.Options.WebPageHeight = 0;
+
+                converter.Options.PdfPageSize = PdfPageSize.A4;
+                converter.Options.PdfPageOrientation = PdfPageOrientation.Portrait;
+
+                SelectPdf.PdfDocument doc;
+                string url = "https://selectpdf.com/community-edition/";
+                // convert url or html string to pdf
+                // doc = converter.ConvertUrl(url);
+                doc = converter.ConvertHtmlString(PDF.GetSalariesHTML(listEmp));
+                //if (!string.IsNullOrEmpty(url))
+                //{
+                //}
+                //else
+                //{
+                //    // doc = converter.ConvertHtmlString(html, base_url);
+                //}
+
+                // save pdf
+                byte[] pdf = doc.Save();
+                doc.Close();
+
+                return new FileContentResult(pdf, "application/pdf")
+                {
+                    FileDownloadName = "Document.pdf"
+                };
             }
             catch (Exception e)
             {

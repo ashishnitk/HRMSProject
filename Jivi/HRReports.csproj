@@ -13,24 +13,18 @@
 
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.95.4" />
-    <PackageReference Include="DinkToPdf" Version="1.0.8" />
     <PackageReference Include="ExcelDataReader" Version="3.6.0" />
     <PackageReference Include="ExcelDataReader.DataSet" Version="3.6.0" />
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.15.2-preview" />
+    <PackageReference Include="Select.HtmlToPdf.NetCore" Version="20.2.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="5.6.3" />
     <PackageReference Include="System.Data.OleDb" Version="5.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Utility\PDF\" />
   </ItemGroup>
 
 <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
     <ItemGroup>
         <DocFile Include="bin\*\*\*.xml" />
     </ItemGroup>
-    <Copy SourceFiles="@(DocFile)" 
-          DestinationFolder="$(PublishDir)" 
-          SkipUnchangedFiles="false" />
+    <Copy SourceFiles="@(DocFile)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="false" />
 </Target>
 </Project>
