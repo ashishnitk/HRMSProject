@@ -4,13 +4,34 @@
         <name>HRReports</name>
     </assembly>
     <members>
-        <member name="M:HRMS.Controllers.ReportController.PFStatement(HRReporting.Model.Month,System.Int32)">
+        <member name="M:HRMS.Controllers.SDataFeedController.#ctor(Microsoft.Extensions.Logging.ILogger{HRMS.Controllers.SDataFeedController},HRReporting.Services.ICosmosDbService)">
+            <summary>
+            Generate APIs
+            </summary>
+            <param name="logger"></param>
+            <param name="cosmosDbService"></param>
+        </member>
+        <member name="M:HRMS.Controllers.SDataFeedController.Upload(Microsoft.AspNetCore.Http.IFormFile)">
+            <summary>
+            Upload the Salary Register
+            </summary>
+            <param name="file">Input File in xls format</param>
+            <returns></returns>
+        </member>
+        <member name="M:HRMS.Controllers.ReportsController.#ctor(Microsoft.Extensions.Logging.ILogger{HRMS.Controllers.ReportsController},HRReporting.Services.ICosmosDbService)">
+            <summary>
+            Generate APIs
+            </summary>
+            <param name="logger"></param>
+            <param name="cosmosDbService"></param>
+        </member>
+        <member name="M:HRMS.Controllers.ReportsController.PFStatement(HRReporting.Model.Month,System.Int32)">
             <summary>
             Provident Fund statement of an employee
             </summary>
             <returns></returns>
         </member>
-        <member name="M:HRMS.Controllers.ReportController.ESICStatement(HRReporting.Model.Month,System.Int32)">
+        <member name="M:HRMS.Controllers.ReportsController.ESICStatement(HRReporting.Model.Month,System.Int32)">
             <summary>
             Employees' State Insurance Corporation Report
             </summary>
@@ -21,17 +42,25 @@
             <response code="404">Employee Data Not Found</response>
             <response code="500">Internal Server error</response>
         </member>
-        <member name="M:HRMS.Controllers.ReportController.Upload(Microsoft.AspNetCore.Http.IFormFile)">
+        <member name="M:HRMS.Controllers.ReportsController.TDSStatement(HRReporting.Model.Month,System.Int32)">
             <summary>
-            Upload the Salary Register
+            Tax Deducted at Source statement
             </summary>
-            <param name="file">Input File in xls format</param>
             <returns></returns>
         </member>
-        <member name="M:HRMS.Controllers.ReportController.GetAllEmployeeSalary">
+        <member name="M:HRMS.Controllers.ReportsController.GetAllEmployeeSalary">
             <summary>
             Get the Salary report of all Employee
             </summary>
+            <returns></returns>
+        </member>
+        <member name="M:HRMS.Controllers.ReportsController.PaySlip(System.String,HRReporting.Model.Month,System.Int32)">
+            <summary>
+            Get Payslip of an employee
+            </summary>
+            <param name="EmplID">Employee Code. e.g. MT152</param>
+            <param name="Month">Select the Month</param>
+            <param name="Year">Four Digit year. e.g. 2021</param>
             <returns></returns>
         </member>
         <member name="T:HRReporting.Model.BulkInviteResponseModel">

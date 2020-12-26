@@ -24,14 +24,17 @@ namespace HRMS.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-
-    public class ReportController : ControllerBase
+    public class ReportsController : ControllerBase
     {
-        public static List<Employee> listEmp;
-        private readonly ILogger<ReportController> _logger;
+        private readonly ILogger<ReportsController> _logger;
         private readonly ICosmosDbService _cosmosDbService;
 
-        public ReportController(ILogger<ReportController> logger, ICosmosDbService cosmosDbService)
+        /// <summary>
+        /// Generate APIs
+        /// </summary>
+        /// <param name="logger"></param>
+        /// <param name="cosmosDbService"></param>
+        public ReportsController(ILogger<ReportsController> logger, ICosmosDbService cosmosDbService)
         {
             _logger = logger;
             _cosmosDbService = cosmosDbService;
@@ -134,30 +137,45 @@ namespace HRMS.Controllers
         }
 
         /// <summary>
-        /// Upload the Salary Register
+        /// Tax Deducted at Source statement
         /// </summary>
-        /// <param name="file">Input File in xls format</param>
         /// <returns></returns>
-        [HttpPost("SalaryRegister")]
-        public async Task<IActionResult> Upload(IFormFile file)
+        [HttpGet]
+        [Route("TDSStatement")]
+
+        public async Task<ActionResult> TDSStatement(Month Month, int Year)
         {
+            // DataTable dtProduct = ToDataTable<EmployeeData>(listEmp);
             try
             {
-                if (file == null || file.Length == 0)
-                    return Content("File Not Selected");
+                QueryDefinition query = new QueryDefinition("select * from c where c.Month = @month").WithParameter("@month", string.Format("{0}{1}", Month, Year));
 
-                string fileExtension = Path.GetExtension(file.FileName);
-                if (fileExtension != ".xls" && fileExtension != ".xlsx")
-                    return Content("Invalid file format, Please upload .xls file");
+                List<Employee> listEmp = await _cosmosDbService.GetItemsAsync(query);
 
-                List<Employee> listOfEmployees = Excel.ParseAllEmployees(file);
+                ESICDataTable dt = Excel.GetPFDataTable(listEmp);
 
-                await _cosmosDbService.createBulkItemAsync(listOfEmployees);
-                return Ok();
+                using (XLWorkbook workBook = new XLWorkbook())
+                {
+                    workBook.Worksheets.Add(dt.DataTable, "ESI");
+                    // workBook.Table. = false;
+                    workBook.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    workBook.Style.Font.Bold = true;
+                    var ws = workBook.Worksheet(1);
+                    ws.Columns().AdjustToContents();
+                    var rngHeaders = ws.Range("A" + dt.RowToBeBold + ":G" + dt.RowToBeBold);
+                    // rngHeaders.Style.Fill.BackgroundColor = XLColor.VividViolet;
+                    rngHeaders.Style.Font.Bold = true;
+
+                    using (MemoryStream stream = new MemoryStream())
+                    {
+                        workBook.SaveAs(stream);
+                        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", string.Format("PF_Statement_{0}{1}.xlsx", Month, Year));
+                    }
+                }
             }
             catch (Exception e)
             {
-                return Content(string.Format("Upload File Thrown Exception {0}", e.Message));
+
                 throw;
             }
         }
@@ -177,28 +195,83 @@ namespace HRMS.Controllers
 
                 List<Employee> listEmp = await _cosmosDbService.GetItemsAsync(query);
 
-                // instantiate converter object
-                SelectPdf.HtmlToPdf converter = new SelectPdf.HtmlToPdf();
+                string cssFilePath = Path.Combine(Directory.GetCurrentDirectory(), "Assets");
 
-                // set converter options
-                converter.Options.WebPageWidth = 1024;
-                converter.Options.WebPageHeight = 0;
+                string pdf_page_size = "A4";
+                PdfPageSize pageSize = (PdfPageSize)Enum.Parse(typeof(PdfPageSize), pdf_page_size, true);
 
-                converter.Options.PdfPageSize = PdfPageSize.A4;
-                converter.Options.PdfPageOrientation = PdfPageOrientation.Portrait;
+                string pdf_orientation = "Portrait";
+                PdfPageOrientation pdfOrientation = (PdfPageOrientation)Enum.Parse(typeof(PdfPageOrientation), pdf_orientation, true);
 
-                SelectPdf.PdfDocument doc;
-                string url = "https://selectpdf.com/community-edition/";
-                // convert url or html string to pdf
-                // doc = converter.ConvertUrl(url);
-                doc = converter.ConvertHtmlString(PDF.GetSalariesHTML(listEmp));
-                //if (!string.IsNullOrEmpty(url))
-                //{
-                //}
-                //else
-                //{
-                //    // doc = converter.ConvertHtmlString(html, base_url);
-                //}
+                int webPageWidth = 1024;
+                int webPageHeight = 0;
+
+                HtmlToPdf converter = new HtmlToPdf();
+
+                converter.Options.PdfPageSize = pageSize;
+                converter.Options.PdfPageOrientation = pdfOrientation;
+                converter.Options.WebPageWidth = webPageWidth;
+                converter.Options.WebPageHeight = webPageHeight;
+
+                PdfDocument doc = converter.ConvertHtmlString(PDF.GetSalariesHTML(listEmp), cssFilePath);
+
+
+                // save pdf
+                byte[] pdf = doc.Save();
+                doc.Close();
+
+                return new FileContentResult(pdf, "application/pdf")
+                {
+                    FileDownloadName = "Document.pdf"
+                };
+            }
+            catch (Exception e)
+            {
+
+                throw;
+            }
+        }
+
+
+        /// <summary>
+        /// Get Payslip of an employee
+        /// </summary>
+        /// <param name="EmplID">Employee Code. e.g. MT152</param>
+        /// <param name="Month">Select the Month</param>
+        /// <param name="Year">Four Digit year. e.g. 2021</param>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("PaySlip")]
+        //  [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<ActionResult> PaySlip(string EmplID, Month Month, int Year)
+        {
+            try
+            {
+                QueryDefinition query = new QueryDefinition("select * from c where c.Month = @month and c.EmplId = @emplid");
+                query.WithParameter("@month", string.Format("{0}{1}", Month, Year));
+                query.WithParameter("@emplid", EmplID);
+                List<Employee> listEmp = await _cosmosDbService.GetItemsAsync(query);
+
+                string cssFilePath = Path.Combine(Directory.GetCurrentDirectory(), "Assets");
+
+                string pdf_page_size = "A4";
+                PdfPageSize pageSize = (PdfPageSize)Enum.Parse(typeof(PdfPageSize), pdf_page_size, true);
+
+                string pdf_orientation = "Portrait";
+                PdfPageOrientation pdfOrientation = (PdfPageOrientation)Enum.Parse(typeof(PdfPageOrientation), pdf_orientation, true);
+
+                int webPageWidth = 1024;
+                int webPageHeight = 0;
+
+                HtmlToPdf converter = new HtmlToPdf();
+
+                converter.Options.PdfPageSize = pageSize;
+                converter.Options.PdfPageOrientation = pdfOrientation;
+                converter.Options.WebPageWidth = webPageWidth;
+                converter.Options.WebPageHeight = webPageHeight;
+
+                PdfDocument doc = converter.ConvertHtmlString(PDF.PaySlip(listEmp.Where(a => a.EmplId == EmplID).FirstOrDefault()), cssFilePath);
+
 
                 // save pdf
                 byte[] pdf = doc.Save();

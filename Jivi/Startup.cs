@@ -97,12 +97,14 @@ namespace Jivi
 
             app.UseHttpsRedirection();
             // app.UseResponseCaching();
-
+            app.UseStaticFiles();
             app.UseRouting();
             app.UseSwagger();
+
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+                c.DocumentTitle = "Report Api Connector";
                 //c.SupportedSubmitMethods(new Swashbuckle.AspNetCore.SwaggerUI.SubmitMethod[] { });
 
             });
